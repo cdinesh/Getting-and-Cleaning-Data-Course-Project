@@ -1,0 +1,187 @@
+---
+title: "codebook.md"
+author: "Dinesh Choudhari"
+date: "February 28, 2016"
+output: html_document
+---
+Information and Description of HCI data set.
+==
+Human Activity Recognition Using Smartphones Dataset Version 1.0
+
+
+The dataset includes the following files:
+
+- 'README.txt'
+- 'features_info.txt': Shows information about the variables used on the feature vector.
+- 'features.txt': List of all features.
+- 'activity_labels.txt': Links the class labels with their activity name.
+- 'train/X_train.txt': Training set.
+- 'train/y_train.txt': Training labels.
+- 'test/X_test.txt': Test set.
+- 'test/y_test.txt': Test labels.
+
+The following files are available for the train and test data. Their descriptions are equivalent. 
+
+- 'train/subject_train.txt': Each row identifies the subject who performed the activity for each window sample. Its range is from 1 to 30. 
+
+
+PROJECT IMPLEMENTATION:
+==
+
+##Step 1: Getting and understanding the source data.
+
+1. Create a new directory HARdata (HumanActivityRecognitionData) if not exists to store data files. Download the file directly from given URL
+
+```{r}
+   setwd("~/Desktop/Coursera")
+```
+
+```{r}  
+   if(!file.exists("./HARdata")){dir.create("./HARdata")}
+   fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+   download.file(fileUrl,destfile="./HARdata/Dataset.zip",method="curl")
+```
+
+
+2. Unzip the file and extract files from UCI HAR dataset folder
+
+```{r}
+   unzip(zipfile="./HARdata/Dataset.zip",exdir="./HARdata")
+   path_rf <- file.path("./HARdata" , "UCI HAR Dataset")
+   files<-list.files(path_rf, recursive=TRUE)
+```
+
+3. The files that will be used to load data are listed as follows:
+ 
+   test/subject_test.txt 
+   test/X_test.txt 
+   test/y_test.txt 
+   train/subject_train.txt
+   train/X_train.txt 
+   train/y_train.txt
+
+4. Possible variables based on the file names is
+ 
+  a. Acitvity --> from Y_train.txt and Y_test.txt 
+  b. Subject  --> from subject_train.txt and subject_test.txt
+  c. Features --> from X_train.txt and X_test.txt
+  d. Features --> from features.txt
+  e. Acitvity --> from activity_lables.txt
+  
+  Descriptive variables ( data frame )
+  a. Activity
+  b. Subject
+  c. Features
+  
+##Step 2: Read and store the files into above descriptive variables (Note the variables will be of structure data.frame)
+
+1. Test and Train Activity files
+
+```{r}
+   dataActivityTest  <- read.table(file.path(path_rf, "test" , "Y_test.txt" ),header = FALSE)
+   dataActivityTrain <- read.table(file.path(path_rf, "train", "Y_train.txt"),header = FALSE)
+```
+
+2. Test and Train subject files.
+
+```{r}
+   dataSubjectTrain <- read.table(file.path(path_rf, "train", "subject_train.txt"),header = FALSE)
+   dataSubjectTest  <- read.table(file.path(path_rf, "test" , "subject_test.txt"),header = FALSE)
+```
+
+3. Test and Train Feature files.
+
+```{r}
+   dataFeaturesTest  <- read.table(file.path(path_rf, "test" , "X_test.txt" ),header = FALSE)
+   dataFeaturesTrain <- read.table(file.path(path_rf, "train", "X_train.txt"),header = FALSE)
+```
+
+
+##Step 3: R Script run_analysis.R 
+
+1. Merges the training and the test sets to create one data set.
+  
+ a. R bind data tables
+
+```{r} 
+    dataSubject <- rbind(dataSubjectTrain, dataSubjectTest)
+    dataActivity<- rbind(dataActivityTrain, dataActivityTest)
+    dataFeatures<- rbind(dataFeaturesTrain, dataFeaturesTest)
+```
+
+ b. Variables names.
+
+```{r} 
+    names(dataSubject)<-c("subject")
+    names(dataActivity)<- c("activity")
+    dataFeaturesNames <- read.table(file.path(path_rf, "features.txt"),head=FALSE)
+    names(dataFeatures)<- dataFeaturesNames$V2
+```
+
+ c. Column bind to merge for data frame.
+
+```{r} 
+    dataCombine <- cbind(dataSubject, dataActivity)
+    Data <- cbind(dataFeatures, dataCombine)
+```
+ 
+
+2. Extracts only the measurements on the mean and standard deviation for each measurement.
+
+ a. Take Names of Features with mean() and std()
+
+```{r}    
+    subdataFeaturesNames<-dataFeaturesNames$V2[grep("mean\\(\\)|std\\(\\)", dataFeaturesNames$V2)]
+```
+
+ b. Data frame data by selected names fo Feature from above a.
+
+```{r}    
+    selectedNames<-c(as.character(subdataFeaturesNames), "subject", "activity" )
+    Data<-subset(Data,select=selectedNames)
+```
+
+    
+3. Uses descriptive activity names to name the activities in the data set
+
+ a. Descriptive activity names from “activity_labels.txt”
+
+```{r} 
+    activityLabels <- read.table(file.path(path_rf, "activity_labels.txt"),header = FALSE)
+```
+
+
+4. Appropriately labels the data set with descriptive variable names.
+
+   Replace,
+-   t    --> time
+-   f    --> frequency
+-   Gyro --> Gyroscope
+-   Mag  --> Magnitude
+-   Body --> Body
+
+```{r}   
+  names(Data)<-gsub("^t", "time", names(Data))
+  names(Data)<-gsub("^f", "frequency", names(Data))
+  names(Data)<-gsub("Acc", "Accelerometer", names(Data))
+  names(Data)<-gsub("Gyro", "Gyroscope", names(Data))
+  names(Data)<-gsub("Mag", "Magnitude", names(Data))
+  names(Data)<-gsub("BodyBody", "Body", names(Data))
+```
+
+   
+5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+  a. Tidy data
+
+```{r}    
+    library(plyr);
+    Data2<-aggregate(. ~subject + activity, Data, mean) 
+    Data2<-Data2[order(Data2$subject,Data2$activity),] 
+```
+
+   b. Write second tidy data set to file tidydata.txt
+
+```{r}   
+      write.table(Data2, file = "tidydata.txt",row.name=FALSE)
+```

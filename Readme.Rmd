@@ -1,0 +1,38 @@
+---
+title: "Readme.Rmd"
+author: "Dinesh Choudhari"
+date: "February 28, 2016"
+output: html_document
+---
+
+Data Extraction and Cleaning using R
+==
+
+This project is the course 3 of Data Science certification from John Hopkins.
+
+#Overview
+
+This project demonstrate the collection and cleansing data to form a tidy data for further analysis.
+Dataset used is Human Activity Recognition Using Smartphone available at
+http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones
+
+#Project Summary.
+
+The following key step were used to successfully complete the project.
+
+There is one script run_analysis.R which will,
+
+1. Create a defined directory if not exists, 
+   load the file from the website, and 
+   unzip the files to appropriate directory.
+   
+2. The necessary files were read and data is stored in defined descriptive variables
+
+3. Merges the training and Merges the training and the test sets to create one data set. 
+   Extracts only the measurements on the mean and standard deviation for each measurement. 
+   Uses descriptive activity names to name the activities in the data set 
+   Appropriately labels the data set with descriptive activity names. 
+   Creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+#Additional Information
+Please refer codebook.Rmd for complete description of steps and R code.
